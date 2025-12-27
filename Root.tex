@@ -1,0 +1,32 @@
+%--------------------------------%
+%          Main Document         %
+%--------------------------------%
+\documentclass[nobib]{tufte-book}
+\usepackage{preamble}
+\usepackage{macros}
+\usepackage{letterfonts}
+\usepackage{commands}
+%--------------------------------%
+%        Document Title          %
+%--------------------------------%
+\title{Text Preamble}
+\author{Gudfit}
+\date{}
+%--------------------------------%
+%        Document Body           %
+%--------------------------------%
+\begin{document}
+\maketitle
+\newpage
+\begingroup
+\raggedbottom
+\tableofcontents
+\endgroup
+\pagebreak
+%--------------------------------%
+%            Document            %
+%--------------------------------%
+\setcounter{chapter}{-1}
+\subfile{Chapters/Ch0/Ch0}
+\subfile{Chapters/Ch0/Ch1}
+\end{document}

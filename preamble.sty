@@ -1,0 +1,737 @@
+% ----------------------------------------------------------------------
+% Custom Preamble Package for Tufte-Book
+% ----------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{preamble}[2024/04/27 Custom preamble package for tufte-book]
+% ----------------------------------------------------------------------
+% Options (available in both pdflatex and lualatex/xelatex)
+% ----------------------------------------------------------------------
+\def\optBackGround{natural}
+\def\optPaper{natural}
+\def\optMathSymbols{new}
+\def\optFootnoteMark{numbers}
+% ----------------------------------------------------------------------
+% General layout
+% ----------------------------------------------------------------------
+% NOTE: Tufte-book handles paragraph spacing; only set parindent
+\parindent=0pt
+%--------------------------------%
+% Package Imports %
+%--------------------------------%
+% NOTE: tufte-book already loads: mathpazo, helvet, beramono, fontenc, microtype,
+%       geometry, fancyhdr, hyperref, xcolor, graphicx - DO NOT reload these!
+
+% Encoding and Fonts
+\RequirePackage{iftex}
+\ifPDFTeX
+  \RequirePackage[utf8]{inputenc}
+  \RequirePackage[english]{babel}
+  % CJK support for kanji QED symbols
+  \RequirePackage{CJKutf8}
+  \newcommand{\zh}[1]{\begin{CJK}{UTF8}{min}#1\end{CJK}}
+  \newcommand{\hanzi}[1]{\begin{CJK}{UTF8}{gkai}#1\end{CJK}}
+  \newcommand{\kanji}[1]{\begin{CJK}{UTF8}{bkai}#1\end{CJK}}
+  \newcommand{\kana}[1]{\begin{CJK}{UTF8}{min}#1\end{CJK}}
+\else
+  \RequirePackage[english]{babel}
+  \RequirePackage{fontspec}
+  \RequirePackage{xeCJK}
+  % Tufte+fontspec compatibility fix
+  \renewcommand\allcapsspacing[1]{{\addfontfeature{LetterSpace=15}#1}}
+  \renewcommand\smallcapsspacing[1]{{\addfontfeature{LetterSpace=10}#1}}
+  \IfFileExists{/usr/local/texlive/2025/texmf-dist/fonts/opentype/public/fandol/FandolSong-Regular.otf}{%
+    \setCJKmainfont{FandolSong-Regular.otf}[
+      Path=/usr/local/texlive/2025/texmf-dist/fonts/opentype/public/fandol/
+    ]%
+    \newCJKfontfamily\kanjifont{FandolSong-Regular.otf}[
+      Path=/usr/local/texlive/2025/texmf-dist/fonts/opentype/public/fandol/
+    ]%
+  }{%
+    \IfFontExistsTF{FandolSong-Regular}{%
+      \setCJKmainfont{FandolSong-Regular}%
+      \newCJKfontfamily\kanjifont{FandolSong-Regular}%
+    }{%
+      \IfFontExistsTF{Noto Serif CJK JP}{%
+        \setCJKmainfont{Noto Serif CJK JP}%
+        \newCJKfontfamily\kanjifont{Noto Serif CJK JP}%
+      }{%
+        \IfFontExistsTF{Source Han Serif}{%
+          \setCJKmainfont{Source Han Serif}%
+          \newCJKfontfamily\kanjifont{Source Han Serif}%
+        }{%
+          \newCJKfontfamily\kanjifont{Latin Modern Roman}%
+        }%
+      }%
+    }%
+  }%
+  \newcommand{\zh}[1]{{\kanjifont #1}}
+  \newcommand{\hanzi}[1]{{\kanjifont #1}}
+  \newcommand{\kanji}[1]{{\kanjifont #1}}
+  \newcommand{\kana}[1]{{\kanjifont #1}}
+  % Fix for \PazoBB used in some packages/TOC but not defined without mathpazo
+  \providecommand{\PazoBB}[1]{\mathbb{#1}}
+\fi
+
+\RequirePackage{amsmath, amsfonts, amsthm, amssymb, mathrsfs}
+\RequirePackage{bm, xfrac, cancel, mathtools}
+% NOTE: tufte-book already loads hyperref, xcolor, graphicx
+\RequirePackage{titling}
+% Load cleveref with nameinlink option to make entire reference clickable
+\RequirePackage[nameinlink]{cleveref}
+\RequirePackage[numbers]{natbib}
+\bibliographystyle{unsrt}
+\RequirePackage{graphicx}
+\RequirePackage{pgfplots}
+% Real cube root for all real x
+\pgfmathdeclarefunction{cuberoot}{1}{%
+  \pgfmathparse{sign(#1)*abs(#1)^(1/3)}%
+}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+\RequirePackage{tikz}
+\RequirePackage{tikz-3dplot}
+\RequirePackage{subfiles}
+\RequirePackage{tikz-cd}
+\RequirePackage{tkz-euclide}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+\RequirePackage{wrapfig}
+\RequirePackage{multirow}
+\RequirePackage{booktabs}
+\RequirePackage{import}
+\RequirePackage{pdfpages}
+\RequirePackage{transparent}
+\RequirePackage{float}
+\RequirePackage{etoolbox}
+\RequirePackage{enumitem}
+\setlist[itemize]{topsep=0ex,itemsep=0ex,partopsep=1ex,parsep=1ex,label=$\cdot$,leftmargin=*}
+\setlist[enumerate]{topsep=0ex,itemsep=0ex,partopsep=1ex,parsep=1ex,leftmargin=*}
+
+% Footnote Configuration
+\RequirePackage{perpage}
+\MakePerPage{footnote}
+\newif\iffootnotesymbols
+
+\makeatletter
+  % Stars Definition
+  \newcommand{\stars}{}% just for safety
+  \DeclareRobustCommand{\stars}[1]{\stars@{#1}}
+  \newcommand{\stars@}[1]{%
+    \ifcase#1\relax\or\stars@one\or\stars@two\or\stars@three\or\stars@four\or\stars@five\or\stars@six
+    \else ??\fi
+  }
+  \newcommand{\stars@char}{\text{*}}
+  \newcommand{\stars@base}[1]{%
+    $\m@th\vcenter{\offinterlineskip\lineskip=-0.65ex\ialign{\hfil##\hfil\cr#1\crcr}}$%
+  }
+  \newcommand{\stars@one}{\stars@base{\stars@char}}
+  \newcommand{\stars@two}{\stars@base{\stars@char\cr\stars@char}}
+  \newcommand{\stars@three}{\stars@base{\stars@char\cr\stars@char\stars@char}}
+  \newcommand{\stars@four}{\stars@base{\stars@char\stars@char\cr\stars@char\stars@char}}
+  \newcommand{\stars@five}{\stars@base{\stars@char\stars@char\cr\stars@char\stars@char\stars@char}}
+  \newcommand{\stars@six}{\stars@base{\stars@char\cr\stars@char\stars@char\cr\stars@char\stars@char\stars@char}}
+
+  % Symbol Footnotes
+  \def\@ssymbol#1{%
+    \ifcase#1\or\textdagger%
+              \or\textdaggerdbl%
+              \or\textdagger\textdagger%
+              \or\textdaggerdbl\textdaggerdbl%
+              \or\stars{1}%
+              \or\stars{2}%
+              \or\stars{3}%
+              \or\stars{4}%
+              \or\stars{5}%
+              \or\stars{6}%
+              \or\textreferencemark%
+              \else\@ctrerr\fi%
+  }
+  \def\ssymbol#1{\expandafter\@ssymbol\csname c@#1\endcsname}
+\makeatother
+
+% Dynamic Footnote Redefinition
+\renewcommand*{\thefootnote}{%
+  \iffootnotesymbols
+    \ssymbol{footnote}%
+  \else
+    \arabic{footnote}%
+  \fi
+}
+
+
+% paragraph indentation and spacing for normal text
+\makeatletter
+  \renewcommand{\@tufte@reset@par}{%
+    \setlength{\RaggedRightParindent}{0.0pc}%
+    \setlength{\JustifyingParindent}{0.0pc}%
+    \setlength{\parindent}{0.0pc}%
+    % \setlength{\parskip}{0.25\baselineskip}%
+  }
+  \@tufte@reset@par
+\makeatother
+
+% paragraph indentation and spacing for marginal text
+\makeatletter
+  \renewcommand{\@tufte@margin@par}{%
+    \setlength{\RaggedRightParindent}{0.0pc}%
+    \setlength{\JustifyingParindent}{0.0pc}%
+    \setlength{\parindent}{0.0pc}%
+    % \setlength{\parskip}{0.25\baselineskip}%
+  }
+\makeatother
+
+% resets the equation counter for align environments every time
+\newcounter{temp}
+\AtBeginEnvironment{align}{%
+  \setcounter{temp}{\value{equation}}%
+  \setcounter{equation}{0}%
+}
+\AfterEndEnvironment{align}{%
+  \setcounter{equation}{\value{temp}}%
+}
+\RequirePackage[ruled,vlined,linesnumbered]{algorithm2e}
+\RequirePackage[skins,breakable]{tcolorbox}
+\RequirePackage{mdframed}
+\RequirePackage{lipsum}
+\RequirePackage{xcolor}
+\RequirePackage{adjustbox}
+\RequirePackage{morefloats}
+\RequirePackage{xstring}
+
+% PDF Settings (pdfTeX only)
+\ifPDFTeX
+  \pdfminorversion=7
+\fi
+%--------------------------------%
+% Theorem Environments %
+%--------------------------------%
+% Single unified accent color - dark greyish purple
+\definecolor{accentbar}{RGB}{75,68,83} % Dark greyish purple
+% Calm blue for proofs
+\definecolor{proofblue}{RGB}{70,130,180}
+% Soft academic pink for emphasis
+\definecolor{emphpink}{RGB}{184,114,135}
+% Warning yellow for claims
+\definecolor{claimyellow}{RGB}{230,180,60}
+% Muted reference color
+\definecolor{refcolor}{RGB}{123,104,238} % MediumSlateBlue (brighter reddish-blue)
+% Subproof color - lighter purple to contrast with main proof blue
+\definecolor{subproofcolor}{RGB}{120,100,140}
+% Colors for notes and remarks
+\definecolor{notecolor}{RGB}{180,60,60}      % Muted red for notes
+\definecolor{remarkcolor}{RGB}{120,120,120}  % Muted gray for remarks
+
+\renewcommand{\emph}[1]{\textcolor{emphpink}{\textit{#1}}}
+
+% Unified theorem style with left accent bar
+\mdfdefinestyle{thmstyle}{%
+  linewidth=1.5pt,
+  linecolor=accentbar,
+  topline=false,
+  bottomline=false,
+  rightline=false,
+  leftline=true,
+  innerleftmargin=8pt,
+  innerrightmargin=0pt,
+  innertopmargin=-2pt,
+  innerbottommargin=-2pt,
+  skipabove=1pt,
+  skipbelow=1pt,
+  backgroundcolor=white
+}
+
+% Specialized style for theorem/axiom/corollary
+\mdfdefinestyle{thmstyle_thm}{%
+  linewidth=1.5pt,
+  linecolor=accentbar,
+  topline=false,
+  bottomline=false,
+  rightline=false,
+  leftline=true,
+  innerleftmargin=8pt,
+  innerrightmargin=0pt,
+  innertopmargin=-2pt,
+  innerbottommargin=-2pt,
+  skipabove=1pt,
+  skipbelow=1pt,
+  backgroundcolor=white
+}
+
+% Claim style with warning yellow accent bar
+\mdfdefinestyle{claimstyle}{%
+  linewidth=1.5pt,
+  linecolor=claimyellow,
+  topline=false,
+  bottomline=false,
+  rightline=false,
+  leftline=true,
+  innerleftmargin=8pt,
+  innerrightmargin=0pt,
+  innertopmargin=0pt,
+  innerbottommargin=0pt,
+  skipabove=1pt,
+  skipbelow=1pt,
+  backgroundcolor=white
+}
+
+% Base theorem style - inline title with textit (not emph which is pink)
+% Format: "Theorem 1. Title. Content..." all inline
+\newtheoremstyle{cleantheorem}
+  {\topsep}   % Space above
+  {\topsep}   % Space below
+  {\normalfont} % Body font
+  {}          % Indent amount
+  {\bfseries\textit} % Theorem head font - bold italic
+  {.}         % Punctuation after theorem head
+  { }         % Space after theorem head (normal space)
+  {\thmname{#1}\thmnumber{ #2}\ifstrempty{#3}{}{. \textit{#3}}} % Head spec - inline
+
+\newtheoremstyle{cleandefinition}
+  {\topsep}
+  {\topsep}
+  {\normalfont}
+  {}
+  {\bfseries\textit}
+  {.}
+  { }
+  {\thmname{#1}\thmnumber{ #2}\ifstrempty{#3}{}{. \textit{#3}}}
+
+\theoremstyle{cleantheorem}
+% Theorems numbered by chapter
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}{Proposition}[chapter]
+\newtheorem{lemma}{Lemma}[chapter]
+\newtheorem{claim}{Claim}[chapter]
+\newtheorem{corollary}{Corollary}[chapter]
+\newtheorem{conjecture}{Conjecture}[chapter]
+\newtheorem*{assumption}{Assumption}
+% Axioms numbered globally (1, 2, 3...)
+\newtheorem{axiom}{Axiom}
+
+\theoremstyle{cleandefinition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{defi}[definition]{Definition}
+\newtheorem{notation}{Notation}[chapter]
+% NOTE: remark and note are defined later as tcolorbox environments, not amsthm
+\newtheorem{example}{Example}[chapter]
+\newtheorem{exmp}{Example}
+\newtheorem{exercise}{Exercise}[chapter]
+
+% Apply mdframed styling to all theorem environments
+\surroundwithmdframed[style=thmstyle_thm]{theorem}
+\surroundwithmdframed[style=thmstyle]{proposition}
+\surroundwithmdframed[style=thmstyle]{lemma}
+\surroundwithmdframed[style=claimstyle]{claim}
+\surroundwithmdframed[style=thmstyle_thm]{corollary}
+\surroundwithmdframed[style=thmstyle]{conjecture}
+\surroundwithmdframed[style=thmstyle]{assumption}
+\surroundwithmdframed[style=thmstyle_thm]{axiom}
+\surroundwithmdframed[style=thmstyle]{definition}
+\surroundwithmdframed[style=thmstyle]{defi}
+\surroundwithmdframed[style=thmstyle]{notation}
+\surroundwithmdframed[style=thmstyle]{example}
+\surroundwithmdframed[style=thmstyle]{exmp}
+\surroundwithmdframed[style=thmstyle]{exercise}
+
+%--------------------------------%
+% Custom Commands %
+%--------------------------------%
+% Paired Delimiters for Easy Scaling
+\DeclareRobustCommand{\vvec}[1]{\vv{#1}}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+% Differential Operators
+
+
+% Kanji QED markers
+\newcommand{\theoremqed}{\kanji{定理}}
+\newcommand{\corollaryqed}{\kanji{推論}}
+\newcommand{\lemmaqed}{\kanji{引理}}
+\newcommand{\definitionqed}{\kanji{定義}}
+\newcommand{\axiomqed}{\kanji{公理}}
+\newcommand{\exampleqed}{\kanji{範例}}
+\newcommand{\propositionqed}{\kanji{命題}}
+\newcommand{\claimqed}{\kanji{主張}}
+\newcommand{\conjectureqed}{\kanji{予想}}
+\newcommand{\assumptionqed}{\kanji{仮定}}
+\newcommand{\notationqed}{\kanji{記法}}
+\newcommand{\exerciseqed}{\kanji{演習}}
+
+\AtEndEnvironment{theorem}{\par\noindent\null\hfill\theoremqed}
+\AtEndEnvironment{proposition}{\par\noindent\null\hfill\propositionqed}
+\AtEndEnvironment{lemma}{\par\noindent\null\hfill\lemmaqed}
+\AtEndEnvironment{claim}{\par\noindent\null\hfill\claimqed}
+\AtEndEnvironment{corollary}{\par\noindent\null\hfill\corollaryqed}
+\AtEndEnvironment{conjecture}{\par\noindent\null\hfill\conjectureqed}
+\AtEndEnvironment{assumption}{\par\noindent\null\hfill\assumptionqed}
+\AtEndEnvironment{axiom}{\par\noindent\null\hfill\axiomqed}
+\AtEndEnvironment{definition}{\par\noindent\null\hfill\definitionqed}
+\AtEndEnvironment{defi}{\par\noindent\null\hfill\definitionqed}
+\AtEndEnvironment{notation}{\par\noindent\null\hfill\notationqed}
+\AtEndEnvironment{example}{\par\noindent\null\hfill\exampleqed}
+\AtEndEnvironment{exmp}{\par\noindent\null\hfill\exampleqed}
+\AtEndEnvironment{exercise}{\par\noindent\null\hfill\exerciseqed}
+
+\RequirePackage{multicol,array}
+\NewDocumentCommand{\dd}{o}{%
+    \ensuremath{\mathop{}\!\ifstrempty{#1}{%
+        \mathrm{d}%
+    }{%
+        \mathrm{d}^{#1}%
+    }}%
+}
+\NewDocumentCommand{\dv}{o m}{%
+    \ensuremath{\frac{\dd^{#1} #2}{\dd #2^{#1}}}%
+}
+\NewDocumentCommand{\pdv}{o m m}{%
+    \frac{\partial^{#1} #2}{\partial #3^{#1}}%
+}
+
+% Mathematical Operators
+\DeclareMathOperator{\Lap}{\mathcal{L}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\lb}{lb}
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\csch}{csch}
+\DeclareMathOperator{\arcsec}{arcsec}
+\DeclareMathOperator{\arccot}{arccot}
+\DeclareMathOperator{\arccsc}{arccsc}
+\DeclareMathOperator{\arcosh}{arcosh}
+\DeclareMathOperator{\arsinh}{arsinh}
+\DeclareMathOperator{\artanh}{artanh}
+\DeclareMathOperator{\arsech}{arsech}
+\DeclareMathOperator{\arcsch}{arcsch}
+\DeclareMathOperator{\arcoth}{arcoth}
+
+% Shortcuts for Common Symbols
+\newcommand*\circled[1]{\tikz[baseline=-3pt]{
+    \node[shape=circle,draw,inner sep=1pt, minimum size=1.2em] (char) {\small #1};}}
+
+\hypersetup{
+    colorlinks,
+    citecolor=refcolor,
+    filecolor=red,
+    linkcolor=refcolor,
+    urlcolor=red
+}
+
+% Make \href text italic
+\let\oldhref\href
+\renewcommand{\href}[2]{\oldhref{#1}{\textit{#2}}}
+
+% ----------------------------------------------------------------------
+% Reference names for theorem environments
+% ----------------------------------------------------------------------
+\crefname{theorem}{\textit{theorem}}{\textit{theorems}}
+\Crefname{theorem}{\textit{Theorem}}{\textit{Theorems}}
+\crefname{corollary}{\textit{corollary}}{\textit{corollaries}}
+\Crefname{corollary}{\textit{Corollary}}{\textit{Corollaries}}
+\crefname{lemma}{\textit{lemma}}{\textit{lemmas}}
+\Crefname{lemma}{\textit{Lemma}}{\textit{Lemmas}}
+\crefname{definition}{\textit{definition}}{\textit{definitions}}
+\Crefname{definition}{\textit{Definition}}{\textit{Definitions}}
+\crefname{axiom}{\textit{axiom}}{\textit{axioms}}
+\Crefname{axiom}{\textit{Axiom}}{\textit{Axioms}}
+\crefname{exercise}{exercise}{exercises}
+\Crefname{exercise}{Exercise}{Exercises}
+\crefname{example}{example}{examples}
+\Crefname{example}{Example}{Examples}
+\crefname{figure}{\textit{figure}}{\textit{figures}}
+\Crefname{figure}{\textit{Figure}}{\textit{Figures}}
+\crefname{table}{\textit{table}}{\textit{tables}}
+\Crefname{table}{\textit{Table}}{\textit{Tables}}
+\crefname{proposition}{\textit{proposition}}{\textit{propositions}}
+\Crefname{proposition}{\textit{Proposition}}{\textit{Propositions}}
+\crefname{claim}{\textit{claim}}{\textit{claims}}
+\Crefname{claim}{\textit{Claim}}{\textit{Claims}}
+\crefname{conjecture}{\textit{conjecture}}{\textit{conjectures}}
+\Crefname{conjecture}{\textit{Conjecture}}{\textit{Conjectures}}
+\crefname{assumption}{\textit{assumption}}{\textit{assumptions}}
+\Crefname{assumption}{\textit{Assumption}}{\textit{Assumptions}}
+\crefname{remark}{\textit{remark}}{\textit{remarks}}
+\Crefname{remark}{\textit{Remark}}{\textit{Remarks}}
+\crefname{note}{\textit{note}}{\textit{notes}}
+\Crefname{note}{\textit{Note}}{\textit{Notes}}
+\crefname{notation}{\textit{notation}}{\textit{notations}}
+\Crefname{notation}{\textit{Notation}}{\textit{Notations}}
+\crefname{defi}{\textit{definition}}{\textit{definitions}}
+\Crefname{defi}{\textit{Definition}}{\textit{Definitions}}
+
+% ----------------------------------------------------------------------
+% Autoref names (for \autoref compatibility)
+% ----------------------------------------------------------------------
+\def\theoremautorefname{\textit{Theorem}}
+\def\corollaryautorefname{\textit{Corollary}}
+\def\lemmaautorefname{\textit{Lemma}}
+\def\definitionautorefname{\textit{Definition}}
+\def\axiomautorefname{\textit{Axiom}}
+\def\exerciseautorefname{\textit{Exercise}}
+\def\exampleautorefname{\textit{Example}}
+\def\figureautorefname{\textit{Figure}}
+\def\tableautorefname{\textit{Table}}
+\def\propositionautorefname{\textit{Proposition}}
+\def\claimautorefname{\textit{Claim}}
+\def\conjectureautorefname{\textit{Conjecture}}
+\def\assumptionautorefname{\textit{Assumption}}
+\def\remarkautorefname{\textit{Remark}}
+\def\noteautorefname{\textit{Note}}
+\def\notationautorefname{\textit{Notation}}
+\def\defiautorefname{\textit{Definition}}
+
+% Paragraph Formatting - NOTE: tufte-book handles parskip, only set parindent
+\setlength{\parindent}{0pt}
+\RequirePackage{esvect}
+\RequirePackage{comment}
+\RequirePackage{xifthen}
+
+% ----------------------------------------------------------------------
+% Section/Chapter Formatting
+% ----------------------------------------------------------------------
+\gdef\BookChapterOption{chapter}
+\let\cleardoublepage=\clearpage
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{1}
+
+% Part format
+\titleformat{\part}[display]
+  {\itshape\Huge}
+  {\thepart}
+  {0ex}
+  {\itshape\Huge}
+  [\vspace{1ex}]
+\titlecontents{part}
+  [0em]
+  {\vspace{1.5\baselineskip}\begin{fullwidth}\LARGE\rmfamily\itshape}
+  {\contentslabel{2em}}
+  {}
+  {}
+  [\end{fullwidth}]
+
+% Chapter format (no number shown in title, but counted)
+\titleformat{\chapter}
+  [display]
+  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}
+  {\itshape\huge\thechapter}
+  {0pt}
+  {\huge\rmfamily\itshape}
+  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]
+\titlecontents{chapter}
+  [0em]
+  {\vspace{0pt}\begin{fullwidth}\large\rmfamily\itshape}
+  {\hspace*{0em}\contentslabel{2em}}
+  {\hspace*{0em}}
+  {\rmfamily\upshape\hfill\thecontentspage}
+  [\end{fullwidth}]
+
+% Section format (numbered)
+\titleformat{\section}
+  [hang]
+  {\bfseries\itshape\Large}
+  {\llap{\Large\thesection\phantom{m}}}
+  {0em}
+  {}
+  []
+\titlecontents{section}
+  [0em]
+  {\vspace{-4pt}\begin{fullwidth}\normalsize\rmfamily\itshape}
+  {\hspace*{2em}\contentslabel{2em}}
+  {\hspace*{2em}}
+  {\normalsize\rmfamily\upshape\hfill\thecontentspage}
+  [\end{fullwidth}]
+
+% Subsection format
+\titleformat{\subsection}
+  [hang]
+  {\bfseries\itshape\large}
+  {\llap{\thesubsection\phantom{m}}}
+  {0em}
+  {}
+  []
+\titlecontents{subsection}
+  [0em]
+  {\vspace{-4pt}\begin{fullwidth}\small\rmfamily\itshape}
+  {\hspace*{4em}\contentslabel{4em}}
+  {\hspace*{4em}}
+  {\normalsize\rmfamily\upshape\hfill\thecontentspage}
+  [\end{fullwidth}]
+
+% Subsubsection format (bold, not italic)
+\makeatletter
+\@ifundefined{c@subsubsection}{%
+  \newcounter{subsubsection}[subsection]%
+}{}
+\renewcommand{\thesubsubsection}{\thesubsection.\@arabic\c@subsubsection}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{\z@}%
+  {-2ex \@plus -0.5ex \@minus -0.2ex}%
+  {1ex \@plus 0.2ex}%
+  {\normalfont\normalsize\bfseries}} % Bold only, no italic
+\makeatother
+
+\ifPDFTeX
+  \pdfsuppresswarningpagegroup=1
+\fi
+\renewcommand\qedsymbol{$\blacksquare$}
+
+% ----------------------------------------------------------------------
+% Custom Proof/Remark/Note Environments with Left Rule (using tcolorbox)
+% ----------------------------------------------------------------------
+% Save the original proof environment
+\let\oldproof\proof
+\let\oldendproof\endproof
+
+% Base style for proof-like environments
+\tcbset{
+  proofbasestyle/.style={
+    blanker,
+    breakable,
+    boxsep=0pt,
+    left=8pt,
+    right=0pt,
+    top=4pt,
+    bottom=4pt,
+    before skip=6pt,
+    after skip=6pt,
+    parbox=true,
+    parskip=0.2ex,
+  }
+}
+
+% Create the styled proof environment (blue bar)
+\renewenvironment{proof}[1][\proofname]{%
+  \begin{tcolorbox}[
+    proofbasestyle,
+    borderline west={1.5pt}{0pt}{proofblue},
+    before upper={\textit{\textcolor{proofblue}{#1}}\par\smallskip},
+  ]%
+  \setlist[itemize]{leftmargin=*,labelsep=0.5em}%
+  \setlist[enumerate]{leftmargin=*,labelsep=0.5em}%
+}{%
+  \par\noindent\null\hfill\qedsymbol
+  \end{tcolorbox}%
+}
+
+% Remark environment (muted gray bar)
+\NewDocumentEnvironment{remark}{o}{%
+  \begin{tcolorbox}[
+    proofbasestyle,
+    borderline west={1.5pt}{0pt}{remarkcolor},
+    before upper={%
+      \textit{\textcolor{remarkcolor}{Remark\IfNoValueTF{#1}{.}{ (\textit{#1}).}}}\par\smallskip
+    },
+  ]%
+  \setlist[itemize]{leftmargin=*,labelsep=0.5em}%
+  \setlist[enumerate]{leftmargin=*,labelsep=0.5em}%
+}{%
+  \end{tcolorbox}%
+}
+
+% Note environment (red bar)
+\NewDocumentEnvironment{note}{o}{%
+  \begin{tcolorbox}[
+    proofbasestyle,
+    borderline west={1.5pt}{0pt}{notecolor},
+    before upper={%
+      \textit{\textcolor{notecolor}{Note\IfNoValueTF{#1}{}{ (\textit{#1})}}}\par\smallskip
+    },
+  ]%
+  \setlist[itemize]{leftmargin=*,labelsep=0.5em}%
+  \setlist[enumerate]{leftmargin=*,labelsep=0.5em}%
+}{%
+  \end{tcolorbox}%
+}
+
+% ----------------------------------------------------------------------
+% Proof with Description (pfd) - shorthand command
+% ----------------------------------------------------------------------
+\NewDocumentCommand{\pfd}{ O{} m +m }{%
+  \begin{proof}[#2]%
+    \ifstrempty{#1}{}{\label{#1}}%
+    #3
+  \end{proof}%
+}
+
+% ----------------------------------------------------------------------
+% Smaller Proof (spf) - for embedded proofs/cases within proof blocks
+% ----------------------------------------------------------------------
+\NewDocumentCommand{\spf}{ m +m }{%
+  \par\vspace{3pt}%
+  \begin{tcolorbox}[
+    blanker,
+    breakable,
+    boxsep=0pt,
+    left=8pt,
+    right=0pt,
+    top=4pt,
+    bottom=4pt,
+    before skip=0pt,
+    after skip=3pt,
+    parbox=true,
+    parskip=0.2ex,
+    borderline west={1.5pt}{0pt}{subproofcolor},
+    before upper={\textit{\textcolor{subproofcolor}{#1}}\par\smallskip},
+  ]%
+  \setlist[itemize]{leftmargin=*,labelsep=0.5em}%
+  \setlist[enumerate]{leftmargin=*,labelsep=0.5em}%
+  #2%
+  \par\noindent\null\hfill\kanji{証明終}%
+  \end{tcolorbox}%
+}
+
+\newcommand\mycommfont[1]{\rmfamily\textcolor{black}{#1}}
+\SetCommentSty{mycommfont}
+\newcommand{\incfig}[1]{%
+    \def\svgwidth{\columnwidth}
+    \import{./figures/}{#1.pdf_tex}
+}
+\SetKwComment{Comment}{\(\triangleright\) }{}
+\makeatletter
+\def\intkern@{\mkern-12mu \mathchoice{\mkern-3mu}{}{}{}}
+\makeatother
+
+\usetikzlibrary{automata,shapes.geometric,matrix,arrows.meta,positioning,fit,calc}
+\usetikzlibrary{decorations.pathmorphing,calc}
+\usetikzlibrary{intersections}
+\usetikzlibrary{angles,quotes,through}
+\usetikzlibrary{backgrounds}
+\makeatletter
+\@ifundefined{tkzDrawAngle}{\let\tkzDrawAngle\tkzFillAngle}{}%
+\@ifundefined{tkzDrawRay}{%
+  \def\tkzDrawRay{\@ifnextchar[{\tkz@DrawRay@opt}{\tkz@DrawRay@noopt}}%
+  \def\tkz@DrawRay@opt[#1](#2,#3){\tkzDrawLine[add=0 and 3,#1](#2,#3)}%
+  \def\tkz@DrawRay@noopt(#1,#2){\tkzDrawLine[add=0 and 3](#1,#2)}%
+}{}%
+\@ifundefined{tkzDrawRays}{%
+  \def\tkzDrawRays{\@ifnextchar[{\tkz@DrawRays@opt}{\tkz@DrawRays@noopt}}%
+  \def\tkz@DrawRays@opt[#1](#2){\tkzDrawLines[add=0 and 3,#1](#2)}%
+  \def\tkz@DrawRays@noopt(#1){\tkzDrawLines[add=0 and 3](#1)}%
+}{}%
+\makeatother
+
+% ----------------------------------------------------------------------
+% Patches for Package Compatibility
+% ----------------------------------------------------------------------
+\makeatletter
+\ifdefined\pgf@matrix@last@nextcell@options
+\else
+  \def\pgf@matrix@last@nextcell@options{\pgfkeysvalueof{/tikz/next cell}}
+\fi
+\makeatother
+
+% ----------------------------------------------------------------------
+% NOTE: Macro shorthand commands are defined in macros.sty
+% ----------------------------------------------------------------------
+
+\AtBeginDocument{
+  \raggedbottom
+  % Ensure nameref uses textit
+  \let\oldnameref\nameref
+  \renewcommand{\nameref}[1]{\textit{\oldnameref{#1}}}
+  % Ensure autoref uses textit for the whole link
+  \let\oldautoref\autoref
+  \renewcommand{\autoref}[1]{\textit{\oldautoref{#1}}}
+}

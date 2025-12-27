@@ -1,0 +1,11 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {0}Preface/Intro chapter}{3}{chapter.0}%
+\contentsline {chapter}{\numberline {1}Demo: Proofs, Margins, and Figures}{4}{chapter.1}%
+\contentsline {subsection}{Subproofs with \texttt {\textbackslash spf}}{4}{subsection*.2}%
+\contentsline {subsection}{Margin Comments}{5}{subsection*.3}%
+\contentsline {subsection}{Figures in the Margin}{5}{subsection*.4}%
+\contentsline {subsection}{Tables in the Margin}{5}{subsection*.5}%
+\contentsline {subsection}{Full-Width Figures}{6}{subsection*.6}%
+\contentsline {chapter}{\numberline {2}Example Chapter: Algebraic Foundations}{7}{chapter.2}%
+\contentsline {section}{\numberline {2.1}The Integers}{7}{section.2.1}%
+\contentsfinish 
